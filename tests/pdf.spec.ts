@@ -1,14 +1,22 @@
 // @vitest-environment jsdom
 import { describe, expect, it, vi } from 'vitest'
-import { deflateSync } from 'node:zlib'
-import { createPagesPdf, downloadPdfFile } from '../src/client/pdf.ts'
+import { inflateSync, deflateSync } from 'node:zlib'
+import { createPagesPdf, downloadPdfFile, parsePng } from '../src/client/pdf.ts'
 import { createDownloadFilename } from '../src/client/filename.ts'
 
 /** 构造一张最小但结构完整的 PNG（canvas.toBlob 输出同构）：IHDR + IDAT + IEND。 */
-function makePng(width: number, height: number, colorType: 0 | 2 | 4 | 6, interlace = 0): Blob {
+function makePng(width: number, height: number, colorType: 0 | 2 | 4 | 6, interlace = 0, seed = 0): Blob {
   const channels = colorType === 0 ? 1 : colorType === 2 ? 3 : colorType === 4 ? 2 : 4
   const raw = new Uint8Array(height * (1 + width * channels))
-  for (let row = 0; row < height; row++) raw[row * (1 + width * channels)] = 0
+  for (let row = 0; row < height; row++) {
+    raw[row * (1 + width * channels)] = 0
+    for (let column = 0; column < width; column++) {
+      const offset = row * (1 + width * channels) + 1 + column * channels
+      for (let channel = 0; channel < channels; channel++) {
+        raw[offset + channel] = (seed + row * 7 + column * 13 + channel * 29) % 251
+      }
+    }
+  }
   const compressed = deflateSync(raw)
   const ihdr = new Uint8Array(13)
   const ihdrView = new DataView(ihdr.buffer)
@@ -64,8 +72,38 @@ function parsePdf(data: Uint8Array): { text: string; offsets: Map<number, number
   return { text, offsets }
 }
 
+/** 从 PDF 字节里按对象号抽取流内容（dict 头 + 二进制流 + endstream）。 */
+function extractStream(data: Uint8Array, text: string, objectId: number): Uint8Array {
+  const start = text.indexOf(`${objectId} 0 obj`)
+  const streamStart = text.indexOf('stream', start) + 'stream'.length
+  let begin = streamStart
+  if (text[begin] === '\r') begin += 1
+  if (text[begin] === '\n') begin += 1
+  let end = text.indexOf('endstream', begin)
+  while (end > begin && (text[end - 1] === '\n' || text[end - 1] === '\r')) end -= 1
+  return data.subarray(begin, end)
+}
+
+/** 逆 PNG 过滤器（仅 filter 0/2 用于测试流；测试图固定 0 过滤字节）。 */
+function unfilterTestRows(raw: Uint8Array, width: number, height: number, components: number): Uint8Array {
+  const stride = width * components
+  const out = new Uint8Array(height * stride)
+  let position = 0
+  for (let row = 0; row < height; row++) {
+    const filter = raw[position]!
+    position += 1
+    for (let index = 0; index < stride; index++) {
+      out[row * stride + index] = filter === 0
+        ? raw[position + index]!
+        : (raw[position + index]! + out[(row - 1) * stride + index]!) & 0xff
+    }
+    position += stride
+  }
+  return out
+}
+
 describe('PDF 装配', () => {
-  it('单页 PNG 装配为单页 PDF，页面尺寸等于像素尺寸', async () => {
+  it('单页 RGB PNG 装配为单页 PDF，页面尺寸等于像素尺寸', async () => {
     const blob = await createPagesPdf([makePng(768, 512, 2)], '标题', new Date(2026, 9, 10, 9, 8, 7))
     const bytes = await readBlobBytes(blob)
     const { text, offsets } = parsePdf(bytes)
@@ -78,6 +116,9 @@ describe('PDF 装配', () => {
     expect(text).toContain('/Predictor 15 /Colors 3')
     expect(text).toContain('/CreationDate (D:20261010090807)')
     expect(text.trimEnd().endsWith('%%EOF')).toBe(true)
+    // 无 alpha：不产生 SMask，也没有 /Decode 翻转声明（DecodeParms/FlateDecode 除外）
+    expect(text).not.toContain('/SMask')
+    expect(text.replace(/\/(DecodeParms|FlateDecode)/g, '')).not.toContain('/Decode')
     // xref 偏移指向真实对象头
     const xrefStart = Number(text.match(/startxref\n(\d+)/)![1])
     expect(text.slice(xrefStart, xrefStart + 4)).toBe('xref')
@@ -97,21 +138,64 @@ describe('PDF 装配', () => {
     expect(text).toContain('/MediaBox [0 0 140 100]')
   })
 
-  it('带 Alpha 的 PNG 走 RGBA 通道和显式 Decode', async () => {
+  it('带 Alpha 的 PNG 拆出 SMask：主图 DeviceRGB，SMask DeviceGray 存 alpha', async () => {
     const blob = await createPagesPdf([makePng(64, 48, 6)])
-    const { text } = parsePdf(await readBlobBytes(blob))
-    expect(text).toContain('/Predictor 15 /Colors 4')
-    expect(text).toContain('/Decode [0 1 0 1 0 1 0 1]')
+    const bytes = await readBlobBytes(blob)
+    const { text, offsets } = parsePdf(bytes)
+    // 主图：3 分量 DeviceRGB，不带 /Decode；alpha 走独立 SMask 对象
+    expect(text).toContain('/ColorSpace /DeviceRGB')
+    expect(text).toContain('/Predictor 15 /Colors 3')
+    expect(text).toContain('/SMask 5 0 R')
+    expect(text.replace(/\/(DecodeParms|FlateDecode)/g, '')).not.toContain('/Decode')
+    // SMask 对象：DeviceGray、单分量
+    const smaskStart = offsets.get(5)!
+    const smaskDict = text.slice(smaskStart, smaskStart + 400)
+    expect(smaskDict).toContain('/Type /XObject /Subtype /Image')
+    expect(smaskDict).toContain('/ColorSpace /DeviceGray')
+    expect(smaskDict).toContain('/Predictor 15 /Colors 1')
   })
 
-  it('灰度与灰度+Alpha 的 PNG 映射 DeviceGray', async () => {
+  it('SMask 的 alpha 字节与输入 PNG 的 alpha 通道逐像素一致', async () => {
+    const blob = await createPagesPdf([makePng(24, 16, 6, 0, 5)])
+    const bytes = await readBlobBytes(blob)
+    const { text } = parsePdf(bytes)
+    const smaskStream = extractStream(bytes, text, 5)
+    const smaskPixels = unfilterTestRows(inflateSync(smaskStream), 24, 16, 1)
+    const parsed = parsePng((await readBlobBytes(makePng(24, 16, 6, 0, 5))).buffer as ArrayBuffer)!
+    const sourcePixels = unfilterTestRows(inflateSync(parsed.data), 24, 16, 4)
+    for (let index = 0; index < 24 * 16; index++) {
+      expect(smaskPixels[index]).toBe(sourcePixels[index * 4 + 3])
+    }
+  })
+
+  it('拆分后的颜色分量与输入 PNG 的 RGB 逐像素一致', async () => {
+    const blob = await createPagesPdf([makePng(24, 16, 6, 0, 5)])
+    const bytes = await readBlobBytes(blob)
+    const { text, offsets } = parsePdf(bytes)
+    const imageStart = offsets.get(4)!
+    const imageDict = text.slice(imageStart, imageStart + 500)
+    const lengthMatch = imageDict.match(/\/Length (\d+)/)!
+    const imageStream = extractStream(bytes, text, 4)
+    expect(imageStream.length).toBe(Number(lengthMatch[1]))
+    const colorPixels = unfilterTestRows(inflateSync(imageStream), 24, 16, 3)
+    const parsed = parsePng((await readBlobBytes(makePng(24, 16, 6, 0, 5))).buffer as ArrayBuffer)!
+    const sourcePixels = unfilterTestRows(inflateSync(parsed.data), 24, 16, 4)
+    for (let index = 0; index < 24 * 16; index++) {
+      expect(colorPixels[index * 3]).toBe(sourcePixels[index * 4])
+      expect(colorPixels[index * 3 + 1]).toBe(sourcePixels[index * 4 + 1])
+      expect(colorPixels[index * 3 + 2]).toBe(sourcePixels[index * 4 + 2])
+    }
+  })
+
+  it('灰度与灰度+Alpha 的 PNG 映射 DeviceGray；灰度+Alpha 走 SMask', async () => {
     const gray = parsePdf(await readBlobBytes(await createPagesPdf([makePng(32, 32, 0)]))).text
     expect(gray).toContain('/ColorSpace /DeviceGray')
     expect(gray).toContain('/Colors 1')
-    const grayAlpha = parsePdf(await readBlobBytes(await createPagesPdf([makePng(32, 32, 4)]))).text
-    expect(grayAlpha).toContain('/ColorSpace /DeviceGray')
-    expect(grayAlpha).toContain('/Colors 2')
-    expect(grayAlpha).toContain('/Decode [0 1 0 1]')
+    expect(gray).not.toContain('/SMask')
+    const grayAlpha = parsePdf(await readBlobBytes(await createPagesPdf([makePng(32, 32, 4)])))
+    expect(grayAlpha.text).toContain('/ColorSpace /DeviceGray')
+    expect(grayAlpha.text).toContain('/Colors 1')
+    expect(grayAlpha.text).toContain('/SMask')
   })
 
   it('拒绝非 PNG 输入、隔行 PNG 和超预算归档', async () => {

@@ -1,7 +1,9 @@
 interface PngImage {
+    /** IDAT 拼接后的 zlib 像素流（PNG 过滤行）。 */
     data: Uint8Array<ArrayBuffer>;
     width: number;
     height: number;
+    /** 0 灰度、2 RGB、4 灰度+Alpha、6 RGBA。 */
     colorType: number;
 }
 /** 逐块扫描 PNG，抽取 IHDR 元数据和 IDAT 像素流；非 PNG 输入返回 undefined。 */
