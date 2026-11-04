@@ -1,7 +1,7 @@
 {
   "name": "dsh-share",
   "version": "0.5.1",
-  "description": "Share DSH Q&As or selected conversation groups as PNG or Markdown.",
+  "description": "Share DSH Q&As or selected conversation groups as PNG, PDF, Markdown, or HTML.",
   "author": "hellodigua",
   "keywords": [
     "deepseek-harness",

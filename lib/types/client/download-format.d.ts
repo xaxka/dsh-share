@@ -1,5 +1,5 @@
 import { type ShareLocale } from './i18n.ts';
-export type DownloadFormat = 'markdown' | 'html' | 'pdf' | 'docx';
+export type DownloadFormat = 'markdown' | 'html' | 'pdf';
 interface FormatProps {
     locale: ShareLocale;
     disabled: boolean;

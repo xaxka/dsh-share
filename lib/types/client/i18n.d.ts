@@ -27,15 +27,12 @@ export interface Translation {
     downloadMarkdown: string;
     downloadHtml: string;
     downloadPdf: string;
-    downloadDocx: string;
     downloadFile: string;
     downloadFormat: string;
     htmlExporting: string;
     htmlExportFailed: string;
     pdfExporting: string;
     pdfExportFailed: string;
-    docxExporting: string;
-    docxExportFailed: string;
     htmlMissingImages: string;
     imageMissingImages(count: number): string;
     markdownExporting: string;

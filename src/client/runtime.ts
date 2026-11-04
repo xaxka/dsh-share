@@ -14,7 +14,6 @@ import { getDocumentLocale, t, type ShareLocale } from './i18n.ts'
 import { createShareMarkdown } from './markdown.ts'
 import { createShareHtml } from './html.ts'
 import { createPagesPdf, downloadPdfFile } from './pdf.ts'
-import { createPagesDocx, downloadDocxFile } from './docx.ts'
 import { replaceGenuiWithImages } from './static-genui.ts'
 import { mountDownloadFormat, type DownloadFormat } from './download-format.ts'
 import {
@@ -605,7 +604,6 @@ export function createShareRuntime(document: Document, options: InstallOptions =
       controller.downloadFormat?.update(locale, true)
       htmlStatus.textContent = format === 'markdown' ? t(locale).markdownExporting
         : format === 'pdf' ? t(locale).pdfExporting
-        : format === 'docx' ? t(locale).docxExporting
         : t(locale).htmlExporting
       try {
         if (format === 'markdown') {
@@ -620,15 +618,6 @@ export function createShareRuntime(document: Document, options: InstallOptions =
           if (!footer.isConnected) return
           downloadPdfFile(document, result, title)
           htmlStatus.textContent = ''
-        } else if (format === 'docx') {
-          // Word 与 PDF 同一渲染产物：先走同一张渲染管线拿到分页 PNG，再装配为可编辑 Word。
-          const dialog = ensureDialog()
-          const rendered = await dialog.renderPagesForPdf(messages, locale)
-          if (!footer.isConnected) return
-          const pages = Array.isArray(rendered) ? rendered : [rendered]
-          const blob = await createPagesDocx(pages, title)
-          downloadDocxFile(document, blob, title)
-          htmlStatus.textContent = ''
         } else {
           const result = await createShareHtml(document, messages, locale, ensureDialog().settings)
           if (!footer.isConnected) return
@@ -639,7 +628,6 @@ export function createShareRuntime(document: Document, options: InstallOptions =
         if (footer.isConnected) {
           htmlStatus.textContent = format === 'markdown' ? t(currentLocale()).markdownExportFailed
             : format === 'pdf' ? t(currentLocale()).pdfExportFailed
-            : format === 'docx' ? t(currentLocale()).docxExportFailed
             : t(currentLocale()).htmlExportFailed
         }
       } finally {

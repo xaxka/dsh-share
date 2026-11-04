@@ -3,7 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { IconChevronDownOutlineRegular, Menu } from '@deepseek-ai/dsh-client-ui-primitives'
 import { t, type ShareLocale } from './i18n.ts'
 
-export type DownloadFormat = 'markdown' | 'html' | 'pdf' | 'docx'
+export type DownloadFormat = 'markdown' | 'html' | 'pdf'
 
 interface FormatProps {
   locale: ShareLocale
@@ -26,11 +26,10 @@ function FormatMenu({ locale, disabled, onChange }: FormatProps) {
       { id: 'markdown', label: 'Markdown' },
       { id: 'html', label: 'HTML' },
       { id: 'pdf', label: 'PDF' },
-      { id: 'docx', label: 'Word' },
     ],
     onClose: () => setOpen(false),
     onSelect: id => {
-      if (disabled || !['markdown', 'html', 'pdf', 'docx'].includes(id)) return
+      if (disabled || !['markdown', 'html', 'pdf'].includes(id)) return
       setFormat(id as DownloadFormat)
       setOpen(false)
       onChange(id as DownloadFormat)
@@ -39,11 +38,11 @@ function FormatMenu({ locale, disabled, onChange }: FormatProps) {
       type: 'button',
       disabled,
       'data-dsh-share-format-trigger': '',
-      'aria-label': `${t(locale).downloadFormat}: ${format === 'html' ? 'HTML' : format === 'pdf' ? 'PDF' : format === 'docx' ? 'Word' : 'Markdown'}`,
+      'aria-label': `${t(locale).downloadFormat}: ${format === 'html' ? 'HTML' : format === 'pdf' ? 'PDF' : 'Markdown'}`,
       'aria-haspopup': 'menu',
       'aria-expanded': open && !disabled,
       onClick: () => setOpen(value => !value),
-    }, format === 'html' ? 'HTML' : format === 'pdf' ? 'PDF' : format === 'docx' ? 'Word' : 'Markdown', createElement(IconChevronDownOutlineRegular, { size: 14 })),
+    }, format === 'html' ? 'HTML' : format === 'pdf' ? 'PDF' : 'Markdown', createElement(IconChevronDownOutlineRegular, { size: 14 })),
   })
 }
 

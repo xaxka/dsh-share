@@ -3,3 +3,4 @@ node_modules/
 *.tgz
 *.tsbuildinfo
 .DS_Store
+e2e-output/

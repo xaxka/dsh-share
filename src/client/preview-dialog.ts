@@ -2,7 +2,6 @@ import { toBlob } from 'html-to-image'
 import { createDownloadFilename } from './filename.ts'
 import { createPagesZip } from './zip.ts'
 import { createPagesPdf } from './pdf.ts'
-import { createPagesDocx } from './docx.ts'
 import { shareExportBackground } from './background.ts'
 import { t, type ShareLocale, type Translation } from './i18n.ts'
 import { createSharePages } from './pagination.ts'
@@ -103,7 +102,7 @@ const MAX_IMAGE_AREA = 32 * 1024 * 1024
 const IMAGE_PIXEL_RATIOS = [2, 1, 0.5, 0.25, 0.125] as const
 
 /** 弹窗图片格式下拉的可选产物。 */
-export type ImageDownloadFormat = 'png' | 'zip' | 'pdf' | 'docx'
+export type ImageDownloadFormat = 'png' | 'zip' | 'pdf'
 
 export type ImageRenderer = (element: HTMLElement) => Promise<Blob | Blob[]>
 
@@ -328,12 +327,11 @@ export class PreviewDialog {
     close.ariaLabel = strings.close
     this.copyButton.textContent = strings.copy
     this.downloadButton.textContent = strings.download
-    // 图片格式下拉：PNG（当前页）/ ZIP（全部页）/ PDF / Word。
+    // 图片格式下拉：PNG（当前页）/ ZIP（全部页）/ PDF。
     const formatChoices: Array<[ImageDownloadFormat, string]> = [
       ['png', strings.download],
       ['zip', strings.downloadAll],
       ['pdf', strings.downloadPdf],
-      ['docx', strings.downloadDocx],
     ]
     this.imageFormatSelect.replaceChildren(...formatChoices.map(([value, label]) => {
       const option = this.document.createElement('option')
@@ -427,8 +425,7 @@ export class PreviewDialog {
     for (const option of this.imageFormatSelect.options) {
       option.textContent = option.value === 'png' ? strings.download
         : option.value === 'zip' ? strings.downloadAll
-        : option.value === 'pdf' ? strings.downloadPdf
-        : strings.downloadDocx
+        : strings.downloadPdf
     }
     this.imageFormatSelect.ariaLabel = strings.downloadFormat
     this.downloadAllButton.textContent = strings.downloadAll
@@ -715,7 +712,7 @@ export class PreviewDialog {
     this.archiveJob = undefined
   }
 
-  /** 图片格式下拉统一分发：当前页 PNG / 全部页 ZIP / PDF / Word。 */
+  /** 图片格式下拉统一分发：当前页 PNG / 全部页 ZIP / PDF。 */
   private async downloadImage(): Promise<void> {
     const format = this.imageFormatSelect.value as ImageDownloadFormat
     if (format === 'zip') {
@@ -726,44 +723,7 @@ export class PreviewDialog {
       await this.downloadPdf()
       return
     }
-    if (format === 'docx') {
-      await this.downloadDocx()
-      return
-    }
     this.download()
-  }
-
-  /** 把当前全部分页装配为单文件 DOCX；内容与图片一致且可编辑。 */
-  private async downloadDocx(): Promise<void> {
-    if (!this.pages.length || this.archiveJob) return
-    const job = new AbortController()
-    this.archiveJob = job
-    const pages = [...this.pages]
-    const title = this.options.getConversationTitle?.()
-    const now = new Date()
-    this.downloadButton.disabled = true
-    this.status.textContent = t(this.options.getLocale()).docxExporting
-    try {
-      const blob = await createPagesDocx(pages, title, now, job.signal)
-      if (job.signal.aborted || !this.element.isConnected) return
-      const url = URL.createObjectURL(blob)
-      const anchor = this.document.createElement('a')
-      anchor.href = url
-      anchor.download = createDownloadFilename('docx', title, undefined, now)
-      try {
-        anchor.click()
-      } finally {
-        this.document.defaultView?.setTimeout(() => URL.revokeObjectURL(url), 60000)
-      }
-      this.status.textContent = ''
-    } catch {
-      if (!job.signal.aborted) this.status.textContent = t(this.options.getLocale()).docxExportFailed
-    } finally {
-      if (this.archiveJob === job) {
-        this.archiveJob = undefined
-        this.downloadButton.disabled = !this.pages.length || this.element.ariaBusy === 'true'
-      }
-    }
   }
 
   /** 把当前全部分页装配为单文件 PDF；页面即预览中的 PNG，观感逐像素一致。 */
