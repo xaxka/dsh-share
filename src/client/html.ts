@@ -150,11 +150,13 @@ function encodeDataUrl(blob: Blob): Promise<string> {
 
 /**
  * 官方 hashed 类名含 header/title/time/body/explanation 片段，按片段映射触发器内部结构；
- * 代码块横幅、代码容器与思考块使用稳定的 data-* 属性识别。
+ * 代码块容器在导出里保留官方 md-code-block 语义（样式表对 .md-code-block/.code-block 同规则），
+ * 思考块、横幅使用稳定的 data-* 属性识别。
  */
 function exportClassName(source: Element): string | undefined {
   if (source.hasAttribute('data-code-block-banner')) return 'code-banner'
-  if (source.classList.contains('md-code-block')) return 'code-block'
+  if (source.classList.contains('md-code-block')) return 'md-code-block'
+  if (source.classList.contains('md-table-wide')) return 'md-table-wide'
   if (source.getAttribute('data-variant') === 'think') return 'reasoning'
   const trigger = source.closest('[data-turn-trigger]')
   if (trigger === source) return 'turn-trigger'
@@ -199,8 +201,13 @@ async function sanitizeNode(output: Document, node: Node, embedder: ImageEmbedde
   }
   for (const child of source.childNodes) result.appendChild(await sanitizeNode(output, child, embedder))
   if (tag === 'table') {
+    // 官方语义：≤3 列或位于引用内的表格铺满列宽，多列表格按内容宽横向滚动。
     const wrapper = output.createElement('div')
+    const columnCount = Math.max(...[...result.querySelectorAll('tr')]
+      .map(row => row.children.length), 0)
     wrapper.className = 'table-scroll'
+    if (columnCount > 3) wrapper.classList.add('table-wide')
+    else wrapper.classList.add('table-fill')
     wrapper.append(result)
     return wrapper
   }
@@ -252,7 +259,8 @@ export async function createShareHtml(
     section.className = message.role
     section.ariaLabel = message.role === 'user' ? locale === 'zh' ? '用户' : 'User' : 'DeepSeek'
     const content = output.createElement('div')
-    content.className = 'content'
+    // 官方正文容器：助手回答走 MarkdownText 规则（.markdown），用户气泡自带 pre-wrap。
+    content.className = message.role === 'assistant' ? 'content markdown' : 'content'
     for (const element of message.elements) content.append(await sanitizeNode(output, element, embedder))
     section.append(content)
     main.append(section)

@@ -99,8 +99,8 @@ describe('端到端：真实会话导出 HTML', () => {
     expect(text).toContain('pwsh') // 工具摘要保留
     expect(text).toContain('const') // 代码保留
     expect(parsed.querySelector('.code-banner')!.textContent).toContain('TS')
-    expect(parsed.querySelector('.code-block pre')).not.toBeNull()
-    expect(parsed.querySelector('.table-scroll > table')).not.toBeNull()
+    expect(parsed.querySelector('.md-code-block pre')).not.toBeNull()
+    expect(parsed.querySelector('.table-scroll.table-fill > table')).not.toBeNull()
     expect(parsed.querySelectorAll('td')).toHaveLength(2)
 
     // 图片内嵌为 data URL 且标记 emoji 尺寸

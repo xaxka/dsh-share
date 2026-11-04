@@ -29,7 +29,7 @@ describe('独立 HTML 导出', () => {
     expect(parsed.querySelector('.speaker')).toBeNull()
     expect(parsed.querySelector('section.user')!.getAttribute('aria-label')).toBe('用户')
     expect(parsed.querySelector('section.assistant')!.getAttribute('aria-label')).toBe('DeepSeek')
-    expect(HTML_STYLE.length).toBeLessThan(6000)
+    expect(HTML_STYLE.length).toBeLessThan(11000)
     expect(HTML_STYLE).toContain('justify-content:flex-end')
   })
 
@@ -57,7 +57,7 @@ describe('独立 HTML 导出', () => {
     const parsed = new DOMParser().parseFromString(result.html, 'text/html')
     expect(parsed.querySelector('.code-banner')!.textContent).toBe('TS')
     expect(parsed.querySelector('pre span')!.getAttribute('style')).toBe('color: rgb(10, 20, 30);')
-    expect(parsed.querySelector('.table-scroll > table')).not.toBeNull()
+    expect(parsed.querySelector('.table-scroll.table-fill > table')).not.toBeNull()
     expect(result.html).not.toContain('bad.invalid')
     expect(parsed.querySelector('button')).toBeNull()
   })

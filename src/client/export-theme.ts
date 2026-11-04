@@ -7,7 +7,7 @@ interface ExportTheme {
 
 const themes = new WeakMap<HTMLElement, ExportTheme>()
 const htmlThemes = new WeakMap<HTMLElement, ReadonlyArray<readonly [string, string]>>()
-const HTML_TOKENS = /^(?:--dsw-alias-(?:bg-base|label-(?:primary|secondary|caption)|border-l[12]|link|markdown-(?:inline-code|code-block|code-block-banner))|--dsw-specific-bubble|--dsw-radius-(?:sm|lg|xl)|--dsw-font-(?:family|markdown-(?:base|h[123]|code-block))|--ds-font-family-code|--dsh-chat-content-width|--dsh-content-font-(?:size|delta))$/
+const HTML_TOKENS = /^(?:--dsw-alias-(?:bg-base|label-(?:primary|secondary|caption|tertiary)|border-l[123]|link|markdown-(?:inline-code|code-block|code-block-banner))|--dsw-specific-bubble|--dsw-radius-(?:sm|md|lg|xl)|--dsw-font-(?:family|markdown-(?:base|h[1234]|code(?:-block)?|table(?:-head)?))|--ds-font-family-code|--dsh-chat-content-width|--dsh-content-font-(?:size|delta)(?:-secondary)?|--dsh-code-font-(?:size|delta))$/
 
 /** 仅保存HTML实际消费的主题值，不复制宿主样式表或资源地址。 */
 function readHtmlTheme(source: HTMLElement): ReadonlyArray<readonly [string, string]> {
