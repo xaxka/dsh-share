@@ -69,6 +69,15 @@ jobs:
         run: |
           TARBALL="$(npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP")"
           echo "path=$RUNNER_TEMP/$TARBALL" >> "$GITHUB_OUTPUT"
+      - name: 发布到 npm
+        run: |
+          NPM_CONFIG_USERCONFIG="$RUNNER_TEMP/.npmrc"
+          printf '//registry.npmjs.org/:_authToken=%s\n' "$NPM_TOKEN" > "$NPM_CONFIG_USERCONFIG"
+          npm publish "$TARBALL" --ignore-scripts
+          rm -f "$NPM_CONFIG_USERCONFIG"
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          TARBALL: ${{ steps.package.outputs.path }}
       - name: 发布到本仓库 GitHub Release
         run: |
           RELEASE_ARGS=(
