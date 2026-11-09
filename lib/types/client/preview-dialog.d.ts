@@ -2,8 +2,6 @@ import { type ShareLocale } from './i18n.ts';
 import { type ShareSettings } from './settings.ts';
 /** 导出前预取卡片图片：成功的转成 data URL 内联（渲染器跳过、不再二次请求），失败项替换为可见占位并计数。 */
 export declare function markUnembeddableImages(card: HTMLElement, locale: 'zh' | 'en'): Promise<number>;
-/** 弹窗图片格式下拉的可选产物。 */
-export type ImageDownloadFormat = 'png' | 'zip' | 'pdf';
 export type ImageRenderer = (element: HTMLElement) => Promise<Blob | Blob[]>;
 export declare function renderShareImage(element: HTMLElement): Promise<Blob | Blob[]>;
 /** PDF 导出走同一渲染管线：先渲染为分页 PNG，再原样装配成单文件 PDF。 */
@@ -29,7 +27,6 @@ export declare class PreviewDialog {
     private readonly status;
     private readonly copyButton;
     private readonly downloadButton;
-    private readonly imageFormatSelect;
     private readonly downloadAllButton;
     private readonly directSingleTurnInput;
     private readonly hideProcessInput;
@@ -79,10 +76,6 @@ export declare class PreviewDialog {
     private copy;
     private download;
     private cancelArchive;
-    /** 图片格式下拉统一分发：当前页 PNG / 全部页 ZIP / PDF。 */
-    private downloadImage;
-    /** 把当前全部分页装配为单文件 PDF；页面即预览中的 PNG，观感逐像素一致。 */
-    private downloadPdf;
     /** 一次保存全部分页，避免多次自动下载被宿主丢弃。 */
     private downloadAll;
 }
