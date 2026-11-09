@@ -685,8 +685,7 @@ describe('分享按钮运行时', () => {
     expect(dialogFooter.querySelector<HTMLElement>('[data-dsh-share-download-all]')!.hidden).toBe(true)
     expect(dialogFooter.querySelector<HTMLElement>('[data-dsh-share-pages]')?.hidden).toBe(true)
     expect(dialogFooter.querySelector('[data-dsh-share-download]')?.textContent).toBe('下载图片')
-    const formatSelect = dialogFooter.querySelector<HTMLSelectElement>('[data-dsh-share-image-format]')!
-    expect([...formatSelect.options].map(option => option.textContent)).toEqual(['下载图片', '下载全部', '下载 PDF'])
+    expect(dialogFooter.querySelector('[data-dsh-share-image-format]')).toBeNull()
     expect(dialogFooter.querySelector('[data-dsh-share-copy]')).not.toBeNull()
     await vi.waitFor(() => expect(dialogFooter.querySelector<HTMLButtonElement>('[data-dsh-share-download]')!.disabled).toBe(false))
     dialogFooter.querySelector<HTMLButtonElement>('[data-dsh-share-download]')!.click()
