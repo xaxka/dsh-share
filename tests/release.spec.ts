@@ -77,6 +77,8 @@ describe('发布边界', () => {
     expect(workflow).toContain('git merge-base --is-ancestor "$TAG_COMMIT" origin/main')
     expect(workflow).toContain('npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP"')
     expect(workflow).toContain('npm publish "$TARBALL" --ignore-scripts')
+    expect(workflow).toContain('npm view "dsh-share@$PACKAGE_VERSION" version')
+    expect(workflow).toContain('gh release view "$TAG_NAME"')
     expect(workflow).toContain('registry.npmjs.org/:_authToken=')
     expect(workflow).toContain('NPM_TOKEN: ${{ secrets.NPM_TOKEN }}')
     expect(workflow).not.toMatch(/npm_[A-Za-z0-9]{16,}/)

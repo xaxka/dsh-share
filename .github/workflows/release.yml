@@ -71,26 +71,35 @@ jobs:
           echo "path=$RUNNER_TEMP/$TARBALL" >> "$GITHUB_OUTPUT"
       - name: 发布到 npm
         run: |
-          export NPM_CONFIG_USERCONFIG="$RUNNER_TEMP/.npmrc"
-          printf '//registry.npmjs.org/:_authToken=%s\n' "$NPM_TOKEN" > "$NPM_CONFIG_USERCONFIG"
-          npm publish "$TARBALL" --ignore-scripts
-          rm -f "$NPM_CONFIG_USERCONFIG"
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          if npm view "dsh-share@$PACKAGE_VERSION" version >/dev/null 2>&1; then
+            echo "dsh-share@$PACKAGE_VERSION already published; skipping npm publish"
+          else
+            export NPM_CONFIG_USERCONFIG="$RUNNER_TEMP/.npmrc"
+            printf '//registry.npmjs.org/:_authToken=%s\n' "$NPM_TOKEN" > "$NPM_CONFIG_USERCONFIG"
+            npm publish "$TARBALL" --ignore-scripts
+            rm -f "$NPM_CONFIG_USERCONFIG"
+          fi
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           TARBALL: ${{ steps.package.outputs.path }}
       - name: 发布到本仓库 GitHub Release
         run: |
-          RELEASE_ARGS=(
-            "$TAG_NAME"
-            "$TARBALL"
-            --verify-tag
-            --title "$TAG_NAME"
-            --generate-notes
-          )
-          if [[ "$PRERELEASE" == "true" ]]; then
-            RELEASE_ARGS+=(--prerelease)
+          if gh release view "$TAG_NAME" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release $TAG_NAME already exists; skipping creation"
+          else
+            RELEASE_ARGS=(
+              "$TAG_NAME"
+              "$TARBALL"
+              --verify-tag
+              --title "$TAG_NAME"
+              --generate-notes
+            )
+            if [[ "$PRERELEASE" == "true" ]]; then
+              RELEASE_ARGS+=(--prerelease)
+            fi
+            gh release create "${RELEASE_ARGS[@]}"
           fi
-          gh release create "${RELEASE_ARGS[@]}"
         env:
           GH_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ steps.version.outputs.tag_name }}
