@@ -1,4 +1,4 @@
-# dsh-share
+# @xixka/dsh-share
 
 简体中文 | [English](./README.en.md)
 
@@ -30,18 +30,18 @@ DSH 对话分享插件，分享单轮或多轮对话，可导出为图片或 Mar
 
 ## 快速安装
 
-使用 DSH CLI 把插件加入 Web Profile，然后重启 `dsh web`：
+使用 DSH CLI 安装 npm 包 `@xixka/dsh-share` 并加入 Web Profile，然后重启 `dsh web`：
 
 ```sh
-dsh plugin --profile web add dsh-share
+dsh plugin --profile web add @xixka/dsh-share
 ```
 
 ## 其他安装方式
 
-安装指定的 GitHub 版本：
+安装指定的 npm 版本：
 
 ```sh
-dsh plugin --profile web add github:hellodigua/dsh-share#vX.Y.Z
+dsh plugin --profile web add @xixka/dsh-share@X.Y.Z
 ```
 
 安装本地源码：
@@ -69,9 +69,9 @@ corepack pnpm build
 corepack pnpm verify
 ```
 
-`lib/` 是 DSH 直接加载的交付物，需要和源码一起提交。修改 `src/` 后，请重新构建并确认 `lib/` 已同步更新。
+`lib/` 是 DSH 直接加载的构建产物，不入库（已在 `.gitignore` 中忽略），由 CI 构建并作为 artifact 上传；修改 `src/` 后提交推送，从 CI artifact 取回 `lib/` 即可本地加载插件，不要本地编译。
 
-发布前使用 `corepack pnpm release:check` 校验 npm 包边界，GitHub → npm 的自动化约定见 [RELEASING.md](https://github.com/hellodigua/dsh-share/blob/main/RELEASING.md)。
+发布前使用 `corepack pnpm release:check` 校验 npm 包边界，GitHub → npm 的自动化约定见 [RELEASING.md](RELEASING.md)。
 
 ## 兼容性
 

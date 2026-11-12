@@ -1,4 +1,4 @@
-# dsh-share
+# @xixka/dsh-share
 
 [简体中文](./README.md) | English
 
@@ -30,18 +30,18 @@ Performance testing: Everyday chat keeps only the lightweight share actions. Sel
 
 ## Quick installation
 
-Add the plugin to the Web Profile with the DSH CLI, then restart `dsh web`:
+Install the npm package `@xixka/dsh-share` into the Web Profile with the DSH CLI, then restart `dsh web`:
 
 ```sh
-dsh plugin --profile web add dsh-share
+dsh plugin --profile web add @xixka/dsh-share
 ```
 
 ## Other installation methods
 
-Install a specific GitHub version:
+Install a specific npm version:
 
 ```sh
-dsh plugin --profile web add github:hellodigua/dsh-share#vX.Y.Z
+dsh plugin --profile web add @xixka/dsh-share@X.Y.Z
 ```
 
 Install from a local checkout:
@@ -69,9 +69,9 @@ Run the full check with one command:
 corepack pnpm verify
 ```
 
-DSH loads the files in `lib/` directly, so they must be committed with the source. After changing `src/`, rebuild and make sure `lib/` is up to date.
+DSH loads the build output in `lib/` directly. It is not committed (ignored via `.gitignore`); CI builds it and uploads it as an artifact. After changing `src/`, commit and push, then fetch `lib/` from the CI artifact to load the plugin locally — do not build locally.
 
-Run `corepack pnpm release:check` before a release. See [RELEASING.md](https://github.com/hellodigua/dsh-share/blob/main/RELEASING.md) for the GitHub-to-npm automation contract.
+Run `corepack pnpm release:check` before a release. See [RELEASING.md](RELEASING.md) for the GitHub-to-npm automation contract.
 
 ## Compatibility
 

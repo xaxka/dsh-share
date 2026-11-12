@@ -72,8 +72,8 @@ jobs:
       - name: 发布到 npm
         run: |
           PACKAGE_VERSION="$(node -p "require('./package.json').version")"
-          if npm view "dsh-share@$PACKAGE_VERSION" version >/dev/null 2>&1; then
-            echo "dsh-share@$PACKAGE_VERSION already published; skipping npm publish"
+          if npm view "@xixka/dsh-share@$PACKAGE_VERSION" version >/dev/null 2>&1; then
+            echo "@xixka/dsh-share@$PACKAGE_VERSION already published; skipping npm publish"
           else
             export NPM_CONFIG_USERCONFIG="$RUNNER_TEMP/.npmrc"
             printf '//registry.npmjs.org/:_authToken=%s\n' "$NPM_TOKEN" > "$NPM_CONFIG_USERCONFIG"

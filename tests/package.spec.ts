@@ -1,3 +1,4 @@
+import { existsSync } from 'node:fs'
 import { readFile } from 'node:fs/promises'
 import { describe, expect, it } from 'vitest'
 
@@ -19,9 +20,9 @@ describe('DSH 插件清单', () => {
       devDependencies: Record<string, string>
     }
 
-    expect(packageJson.name).toBe('dsh-share')
+    expect(packageJson.name).toBe('@xixka/dsh-share')
     expect(packageJson.private).toBeUndefined()
-    expect(packageJson.author).toBe('hellodigua')
+    expect(packageJson.author).toBe('xixka')
     expect(packageJson.publishConfig).toEqual({
       access: 'public',
       registry: 'https://registry.npmjs.org/',
@@ -34,9 +35,9 @@ describe('DSH 插件清单', () => {
     expect(packageJson.files).toContain('README.en.md')
     expect(packageJson.files).toContain('CHANGELOG.md')
     expect(packageJson.files).toContain('assets/readme')
-    expect(packageJson.repository.url).toBe('git+https://github.com/hellodigua/dsh-share.git')
+    expect(packageJson.repository.url).toBe('git+https://github.com/xaxka/dsh-share.git')
     expect(packageJson.scripts.verify).toContain('pnpm typecheck')
-    expect(packageJson.scripts.prepack).toBe('pnpm run build')
+    expect(packageJson.scripts.prepack).toBeUndefined()
     expect(packageJson.scripts['release:check']).toContain('scripts/check-package.mjs')
     expect(packageJson.license).toBe('MIT')
     expect(packageJson.dsh.bundle.patch).toBe('./cordis.patch.yml')
@@ -58,7 +59,7 @@ describe('DSH 插件清单', () => {
     expect(changelog).toMatch(new RegExp(`^## \\[${escapedVersion}\\] - \\d{4}-\\d{2}-\\d{2}$`, 'm'))
   })
 
-  it('公开快照类型的依赖由消费者可安装的 peer 提供', async () => {
+  it.runIf(existsSync(new URL('../lib/types/client/index.d.ts', import.meta.url)))('公开快照类型的依赖由消费者可安装的 peer 提供', async () => {
     const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
     const dependency = '@deepseek-ai/dsh-client-store'
     for (const file of ['../lib/types/client/index.d.ts', '../lib/types/client/runtime.d.ts']) {
@@ -107,7 +108,7 @@ describe('DSH 插件清单', () => {
     const englishReadme = await readFile(new URL('../README.en.md', import.meta.url), 'utf8')
 
     expect(chineseReadme).toContain('[English](./README.en.md)')
-    expect(chineseReadme).toContain('dsh plugin --profile web add dsh-share')
+    expect(chineseReadme).toContain('dsh plugin --profile web add @xixka/dsh-share')
     expect(chineseReadme).toContain('conversation.chat.assistant-actions')
     expect(chineseReadme).not.toContain('conversation.session.header.utilities')
     expect(chineseReadme).toContain('下载 PNG / PDF / Markdown / HTML')
@@ -120,7 +121,7 @@ describe('DSH 插件清单', () => {
     expect(chineseReadme).toContain('./assets/readme/share-dialog.webp')
     expect(englishReadme).toContain('./assets/readme/share-selection.en.webp')
     expect(englishReadme).toContain('./assets/readme/share-dialog.en.webp')
-    expect(englishReadme).toContain('dsh plugin --profile web add dsh-share')
+    expect(englishReadme).toContain('dsh plugin --profile web add @xixka/dsh-share')
     expect(englishReadme).toContain('conversation.chat.assistant-actions')
     expect(englishReadme).not.toContain('conversation.session.header.utilities')
     expect(englishReadme).toContain('PNG / PDF / Markdown / HTML download')

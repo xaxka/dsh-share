@@ -1,6 +1,6 @@
-# 发布 dsh-share
+# 发布 @xixka/dsh-share
 
-`dsh-share` 使用 GitHub tag 驱动 npm Trusted Publishing。仓库负责提供可重复验证的 npm 包；发布 workflow 负责校验 tag、执行 `npm publish --provenance`，并在发布成功后创建 GitHub Release。
+`@xixka/dsh-share` 的 npm 发布完全由 GitHub Actions 完成，本地不执行编译或发布：仓库 secret `NPM_TOKEN` 加密保存 npm 发布凭据，workflow 构建产物并发布。
 
 ## 本地与 CI 校验
 
@@ -10,35 +10,23 @@
 pnpm release:check
 ```
 
-该命令会完成类型检查、测试、构建和 `git diff --check`，再在系统临时目录生成 npm tarball，确认包名、版本、体积、运行时入口、README、许可证和预览图齐全，同时拒绝把源码、测试、脚本或 GitHub 配置装入发布包。它不会创建 tag、推送代码或发布 npm。
+该命令会完成类型检查、构建、测试和 `git diff --check`，再在系统临时目录生成 npm tarball，确认包名、版本、体积、运行时入口、README、许可证和预览图齐全，同时拒绝把源码、测试、脚本或 GitHub 配置装入发布包。它不会创建 tag、推送代码或发布 npm。
 
-CI 在 `main` push 和 pull request 上执行同一检查，并额外要求构建后工作区没有差异，保证提交的 `lib/` 与源码一致。
+CI 在 `main` push 和 pull request 上执行同一检查，并上传构建产物 `lib/` 作为 artifact；`lib/` 不入库，由 CI 产生。
 
-## 人工审阅关卡
+## 发布通道
 
-发版准备直接在 `main` 上进行。默认只更新 `package.json` 和 `CHANGELOG.md`；lockfile 只在确实记录根包版本时更新，README 只在安装方式改变时更新。准备完成后先停止，不创建提交、不推送、不打 tag；用户审阅并明确确认继续后，保留其在审阅期间所做的修改，再完成 release commit 和余下发布流程。
-
-## GitHub → npm 自动化契约
-
-发布 workflow 应由 `v*` tag 触发，并满足以下要求：
-
-1. checkout 使用完整 Git 历史，Node 使用项目 `engines` 支持的版本。
-2. job 只授予 `contents: write` 与 `id-token: write`；npm 通过 Trusted Publisher 的 OIDC 身份发布，不保存长期 npm token。
-3. 只发布 `main` 历史上的提交；使用 frozen lockfile 安装依赖，执行 `pnpm release:check`，并确认 tag 中的版本与 `package.json` 完全一致。
-4. 校验通过后生成一次 tarball，使用 `npm publish <tarball> --provenance` 发布，并把同一文件附加到 GitHub Release，保证两处产物一致。
-5. 稳定版发布到 npm `latest`；预发布版按首个 prerelease 标识发布到对应 dist-tag，并将 GitHub Release 标记为 prerelease。
-6. npm 发布成功后创建 GitHub Release。
-
-npm Trusted Publisher 应绑定仓库 `hellodigua/dsh-share`、实际发布 workflow 文件名和 GitHub Environment（如果 workflow 使用）。这些值必须与 GitHub Actions 配置完全一致。
+1. **CI 自动发布**：`main` 分支的 push 在校验通过后由 `publish` job 直接发布当前版本；npm 上已存在的版本会自动跳过。
+2. **Tag 发布**：推送 `v*` annotated tag 触发 Release workflow，校验 tag 与 `package.json` 版本一致、位于 `main` 历史后，生成一次 tarball 并发布同一文件到 npm，再创建附带该文件的 GitHub Release。
 
 ## 发布版本
 
 发布前确认：
 
-- `main` 包含完整源码、测试和最新 `lib/`。
-- `package.json` 中是本次要发布的 SemVer 版本，包名为 `dsh-share`。
+- `main` 包含完整源码和测试；`lib/` 只由 CI 构建产出。
+- `package.json` 中是本次要发布的 SemVer 版本，包名为 `@xixka/dsh-share`。
 - `CHANGELOG.md` 已记录并经人工审阅确认该版本。
-- npm Trusted Publisher 已配置完成。
+- 仓库 Actions secret `NPM_TOKEN` 为目标 npm 账号的有效发布 token。
 - `pnpm release:check` 与 GitHub CI 均通过。
 
 然后为待发布的 `main` 提交创建与 `package.json` 版本完全一致的 annotated tag（格式为 `vX.Y.Z`，预发布版保留后缀）并推送。不要复用或移动已经发布的版本 tag；npm 版本不可覆盖，修复发布内容时必须提升版本号。

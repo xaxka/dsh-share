@@ -1,6 +1,13 @@
 # 更新日志
 
-本文件记录 `dsh-share` 面向用户的重要变更。
+本文件记录 `@xixka/dsh-share` 面向用户的重要变更。
+
+## [0.5.2] - 2026-11-13
+
+### 变更
+
+- npm 包更名为 `@xixka/dsh-share`，安装方式改为 `dsh plugin --profile web add @xixka/dsh-share`；插件运行时标识不变，已安装用户升级后无需改动配置。
+- `lib/` 构建产物不再提交进仓库，改由 CI 构建并作为 artifact 上传；npm 发布由 GitHub Actions 使用仓库 secret `NPM_TOKEN` 自动完成，本地不再执行编译或发布。
 
 ## [0.5.1] - 2026-11-10
 

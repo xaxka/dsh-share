@@ -1,6 +1,6 @@
 # Third-party licenses
 
-`dsh-share` 的浏览器构建产物内联了以下开源软件。
+`@xixka/dsh-share` 的浏览器构建产物内联了以下开源软件。
 
 ## html-to-image
 

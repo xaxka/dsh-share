@@ -5,9 +5,9 @@
 - 使用中文沟通，面向用户的 README 同步维护中英文版本。
 - 仓库只记录当前有效的产品事实、兼容范围、用户使用方式和开发要求；调研、迁移、排障、临时环境与旧版本验证等过程性记录留在仓库外部，不进入 README、源码注释、changelog 或提交说明。
 - 对外文档描述当前事实，避免夹带内部历史与过程记录。
-- `lib/` 是 DSH 直接加载的交付物，修改 `src/` 后必须同步提交重新构建的产物；构建只允许通过 CI 产生：把源码改动推到临时分支触发 CI，从运行产物取回 `lib/` 覆盖本地，再以 `chore: sync CI-built client artifacts` 单独提交。禁止本地编译或在 CI 之外生成产物。
+- `lib/` 是 DSH 直接加载的构建产物，不入库（`.gitignore` 忽略），只允许通过 CI 产生：把源码改动推到 `main` 触发 CI，从运行产物 artifact 取回 `lib/` 用于本地加载插件。禁止本地编译或在 CI 之外生成产物。npm 发布由 CI `publish` job 使用仓库 secret `NPM_TOKEN` 自动完成，本地不执行发布。
 - 未经用户明确授权，不推送、不发布 npm 包。
-- 源码、依赖或打包改动运行 `pnpm typecheck`、`pnpm test`、`pnpm build`、`npm pack --dry-run`；纯文档改动检查链接与 diff。提交前运行 `git diff --check`。
+- 源码、依赖或打包改动运行 `pnpm typecheck`、`pnpm test`、`pnpm build`、`npm pack --dry-run`（CI 环境或本地已取回 CI 产物时）；纯文档改动检查链接与 diff。提交前运行 `git diff --check`。
 
 ## DSH 版本兼容与升级
 

@@ -1,8 +1,8 @@
 {
-  "name": "dsh-share",
-  "version": "0.5.1",
+  "name": "@xixka/dsh-share",
+  "version": "0.5.2",
   "description": "Share DSH Q&As or selected conversation groups as PNG, PDF, Markdown, or HTML.",
-  "author": "hellodigua",
+  "author": "xixka",
   "keywords": [
     "deepseek-harness",
     "dsh",
@@ -12,11 +12,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/hellodigua/dsh-share.git"
+    "url": "git+https://github.com/xaxka/dsh-share.git"
   },
-  "homepage": "https://github.com/hellodigua/dsh-share#readme",
+  "homepage": "https://github.com/xaxka/dsh-share#readme",
   "bugs": {
-    "url": "https://github.com/hellodigua/dsh-share/issues"
+    "url": "https://github.com/xaxka/dsh-share/issues"
   },
   "type": "module",
   "main": "lib/index.js",
@@ -47,11 +47,10 @@
   "scripts": {
     "build": "pnpm run clean && tsdown && tsc -p tsconfig.json",
     "clean": "node scripts/clean.mjs",
-    "prepack": "pnpm run build",
     "release:check": "pnpm run verify && node scripts/check-package.mjs && git diff --check",
     "test": "vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "verify": "pnpm typecheck && pnpm test && pnpm build"
+    "verify": "pnpm typecheck && pnpm build && pnpm test"
   },
   "dsh": {
     "bundle": {

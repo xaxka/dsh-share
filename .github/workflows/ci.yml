@@ -28,6 +28,33 @@ jobs:
           name: lib-${{ github.sha }}
           path: lib
           retention-days: 1
-      # 构建产物与已提交 lib/ 的差异摘要；仅提示不阻塞，防止两步提交漏同步。
-      - run: git diff --stat -- lib
       - run: git diff --exit-code
+
+  publish:
+    needs: verify
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.18.0
+      - uses: actions/download-artifact@v4
+        with:
+          name: lib-${{ github.sha }}
+          path: lib
+      - name: 发布到 npm
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          PACKAGE_VERSION="$(node -p "require('./package.json').version")"
+          if npm view "@xixka/dsh-share@$PACKAGE_VERSION" version >/dev/null 2>&1; then
+            echo "@xixka/dsh-share@$PACKAGE_VERSION already published; skipping npm publish"
+          else
+            export NPM_CONFIG_USERCONFIG="$RUNNER_TEMP/.npmrc"
+            printf '//registry.npmjs.org/:_authToken=%s\n' "$NPM_TOKEN" > "$NPM_CONFIG_USERCONFIG"
+            PACK_REPORT="$(npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP" --json)"
+            TARBALL="$RUNNER_TEMP/$(node -p "JSON.parse(process.argv[1])[0].filename" "$PACK_REPORT")"
+            npm publish "$TARBALL" --ignore-scripts --access public
+            rm -f "$NPM_CONFIG_USERCONFIG"
+          fi

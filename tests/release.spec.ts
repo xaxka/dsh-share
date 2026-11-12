@@ -21,16 +21,16 @@ afterEach(() => {
 
 function manifest(overrides: Record<string, unknown> = {}) {
   return {
-    author: 'hellodigua',
+    author: 'xixka',
     license: 'MIT',
-    name: 'dsh-share',
+    name: '@xixka/dsh-share',
     publishConfig: {
       access: 'public',
       registry: 'https://registry.npmjs.org/',
     },
     repository: {
       type: 'git',
-      url: 'git+https://github.com/hellodigua/dsh-share.git',
+      url: 'git+https://github.com/xaxka/dsh-share.git',
     },
     version: FIXTURE_VERSION,
     ...overrides,
@@ -46,9 +46,9 @@ function packReport(overrides: Record<string, unknown> = {}) {
     'assets/readme/share-dialog.webp', 'assets/readme/share-dialog.en.webp',
   ].map(path => ({ mode: 0o644, path, size: 1 }))
   return JSON.stringify([{
-    filename: `dsh-share-${FIXTURE_VERSION}.tgz`,
+    filename: `xixka-dsh-share-${FIXTURE_VERSION}.tgz`,
     files,
-    name: 'dsh-share',
+    name: '@xixka/dsh-share',
     size: 128 * 1024,
     unpackedSize: 256 * 1024,
     version: FIXTURE_VERSION,
@@ -77,7 +77,7 @@ describe('发布边界', () => {
     expect(workflow).toContain('git merge-base --is-ancestor "$TAG_COMMIT" origin/main')
     expect(workflow).toContain('npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP"')
     expect(workflow).toContain('npm publish "$TARBALL" --ignore-scripts')
-    expect(workflow).toContain('npm view "dsh-share@$PACKAGE_VERSION" version')
+    expect(workflow).toContain('npm view "@xixka/dsh-share@$PACKAGE_VERSION" version')
     expect(workflow).toContain('gh release view "$TAG_NAME"')
     expect(workflow).toContain('registry.npmjs.org/:_authToken=')
     expect(workflow).toContain('NPM_TOKEN: ${{ secrets.NPM_TOKEN }}')
@@ -89,7 +89,7 @@ describe('发布边界', () => {
   })
 
   it('接受公开的 dsh-share 稳定版和预发布版 manifest', () => {
-    expect(validatePackageManifest(manifest({ version: '1.2.3' })).name).toBe('dsh-share')
+    expect(validatePackageManifest(manifest({ version: '1.2.3' })).name).toBe('@xixka/dsh-share')
     expect(validatePackageManifest(manifest()).version).toBe(FIXTURE_VERSION)
     expect(() => validatePackageManifest(manifest({ private: true }))).toThrow('不能声明 private')
     expect(() => validateReleaseVersion('1.2.3-01')).toThrow('不是可发布 SemVer')
@@ -103,8 +103,8 @@ describe('发布边界', () => {
   })
 
   it('校验 tarball 身份、入口、文档、许可证和预览图', () => {
-    expect(validatePackReport(packReport(), FIXTURE_VERSION).filename).toBe(`dsh-share-${FIXTURE_VERSION}.tgz`)
-    expect(validatePackReport(`build output\n${packReport()}`, FIXTURE_VERSION).name).toBe('dsh-share')
+    expect(validatePackReport(packReport(), FIXTURE_VERSION).filename).toBe(`xixka-dsh-share-${FIXTURE_VERSION}.tgz`)
+    expect(validatePackReport(`build output\n${packReport()}`, FIXTURE_VERSION).name).toBe('@xixka/dsh-share')
     expect(() => validatePackReport(packReport({ name: 'other' }), FIXTURE_VERSION)).toThrow('身份不匹配')
     expect(() => validatePackReport(packReport({ size: 2 * 1024 * 1024 }), FIXTURE_VERSION)).toThrow('体积异常')
   })
