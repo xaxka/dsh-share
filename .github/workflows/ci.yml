@@ -32,7 +32,8 @@ jobs:
 
   publish:
     needs: verify
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # 本仓库是 fork：push 事件不触发 Actions，通过 workflow_dispatch（main ref）驱动发布。
+    if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
