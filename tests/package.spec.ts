@@ -77,9 +77,11 @@ describe('DSH 插件清单', () => {
     expect(packageJson).not.toContain('file:/Users/')
   })
 
-  it('bundle patch 使用 DSH 所需的 insert 数组格式', async () => {
+  it('bundle patch 保留插件 ID 并使用可解析的 npm 包名', async () => {
+    const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
     const patch = await readFile(new URL('../cordis.patch.yml', import.meta.url), 'utf8')
-    expect(patch).toMatch(/- insert:\n\s+- id: dsh-share\n\s+name: dsh-share/)
+    expect(patch).toMatch(/- insert:\n\s+- id: dsh-share\n\s+name:/)
+    expect(patch).toContain(`name: '${manifest.name}'`)
   })
 
   it('Bundle、Host、Client 和构建配置统一使用 npm 包名', async () => {
