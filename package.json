@@ -1,6 +1,6 @@
 {
   "name": "@xixka/dsh-share",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Share DSH Q&As or selected conversation groups as PNG, PDF, Markdown, or HTML.",
   "author": "xixka",
   "keywords": [
