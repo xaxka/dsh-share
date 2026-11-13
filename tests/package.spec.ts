@@ -97,6 +97,13 @@ describe('DSH 插件清单', () => {
     }
   })
 
+  it.runIf(existsSync(new URL('../lib/client.js', import.meta.url)))('client bundle 按当前 npm 包名注册 __ModuleLoader__', async () => {
+    const manifest = JSON.parse(await readFile(new URL('../package.json', import.meta.url), 'utf8'))
+    const client = await readFile(new URL('../lib/client.js', import.meta.url), 'utf8')
+    expect(client.startsWith(`window.__ModuleLoader__.load({ id: ${JSON.stringify(manifest.name)}, factory: (require) => {`))
+      .toBe(true)
+  })
+
   it('构建配置把图片与 Markdown 渲染库内联到浏览器 bundle', async () => {
     const config = await readFile(new URL('../tsdown.config.ts', import.meta.url), 'utf8')
     expect(config).toContain("onlyBundle: ['html-to-image', 'turndown', 'turndown-plugin-gfm']")

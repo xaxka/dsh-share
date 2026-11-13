@@ -2,6 +2,12 @@
 
 本文件记录 `@xixka/dsh-share` 面向用户的重要变更。
 
+## [0.5.4] - 2026-11-13
+
+### 修复
+
+- 修复 0.5.3 安装后插件加载失败的问题：客户端 bundle 的 `__ModuleLoader__` 注册 id 仍为旧包名 `dsh-share`，与迁移后的加载名 `@xixka/dsh-share` 不匹配，导致报错 `loaded without registering "@xixka/dsh-share"`。注册 id 现直接取自 `package.json` 包名，并新增测试锁定构建产物，防止再次漂移。
+
 ## [0.5.3] - 2026-11-13
 
 ### 修复

@@ -1,6 +1,9 @@
+import { readFileSync } from 'node:fs'
 import { defineConfig } from 'tsdown'
 
 const PACKAGE_ID = 'dsh-share'
+// __ModuleLoader__ 按请求的 npm 包名匹配注册 id，必须与 package.json 的 name 一致。
+const MODULE_NAME = JSON.parse(readFileSync(new URL('package.json', import.meta.url), 'utf8')).name
 
 export default defineConfig([
   {
@@ -30,7 +33,7 @@ export default defineConfig([
     },
     outputOptions: {
       entryFileNames: 'client.js',
-      banner: `window.__ModuleLoader__.load({ id: ${JSON.stringify(PACKAGE_ID)}, factory: (require) => {`,
+      banner: `window.__ModuleLoader__.load({ id: ${JSON.stringify(MODULE_NAME)}, factory: (require) => {`,
       footer: 'return module.exports; } });',
       intro: 'var module = { exports: {} }; var exports = module.exports;',
     },
